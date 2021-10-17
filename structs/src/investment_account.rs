@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::{collections::HashMap, rc::Rc};
 
 #[derive(Debug)]
 pub enum InvestmentType {
@@ -9,7 +9,7 @@ pub enum InvestmentType {
 
 #[derive(Debug)]
 pub struct Operation {
-    asset_name: String,
+    asset_name: Rc<String>,
     asset_type: InvestmentType,
     quantity: f64,
     amount: f64
@@ -20,7 +20,7 @@ pub struct InvestmentAccount {
     owner: String,
     balance: f64,
     operations: Vec<Operation>,
-    portfolio: HashMap<String, f64>
+    portfolio: HashMap<Rc<String>, f64>
 }
 
 impl InvestmentAccount { 
@@ -36,12 +36,12 @@ impl InvestmentAccount {
         Ok(format!("Adding ${:.02} to the balance. New balance is ${:.02}", amount, self.balance))
     }
 
-    pub fn buy_asset(&mut self, asset_name: &String, asset_type: InvestmentType, quantity: f64, cost: f64) -> Result<String, String> {
+    pub fn buy_asset(&mut self, asset_name: Rc<String>, asset_type: InvestmentType, quantity: f64, cost: f64) -> Result<String, String> {
         let operation_total = quantity * cost;
         if self.is_operation_allowed(operation_total) {
-            self.save_operation(asset_name, asset_type, quantity, operation_total);
+            self.save_operation(asset_name.clone(), asset_type, quantity, operation_total);
             self.update_balance(operation_total);
-            self.update_portfolio(asset_name, quantity);
+            self.update_portfolio(asset_name.clone(), quantity);
             Ok(format!("Bought {} {} for ${:.02}", quantity, asset_name, operation_total))
         } else {
             Err(format!("Not enough funds. Balance is ${:.02} and operation total is ${:.02}", self.balance, operation_total))
@@ -64,7 +64,7 @@ impl InvestmentAccount {
         self.balance >= operation_total
     }
 
-    fn save_operation(&mut self, asset_name: &String, asset_type: InvestmentType, quantity: f64, operation_total: f64) {
+    fn save_operation(&mut self, asset_name: Rc<String>, asset_type: InvestmentType, quantity: f64, operation_total: f64) {
         let operation = Operation { asset_name: asset_name.clone(), asset_type, quantity, amount: operation_total };
         self.operations.push(operation);
     }
@@ -73,9 +73,9 @@ impl InvestmentAccount {
         self.balance = self.balance - operation_total;
     }
 
-    fn update_portfolio(&mut self, asset_name: &String, quantity: f64) {
-        if self.portfolio.contains_key(asset_name) {
-            let value = self.portfolio.get_mut(asset_name).unwrap();
+    fn update_portfolio(&mut self, asset_name: Rc<String>, quantity: f64) {
+        if self.portfolio.contains_key(&asset_name) {
+            let value = self.portfolio.get_mut(&asset_name).unwrap();
             *value = *value + quantity;
         } else {
             self.portfolio.insert(asset_name.clone(), quantity);
@@ -85,6 +85,8 @@ impl InvestmentAccount {
 
 #[cfg(test)]
 mod test {
+    use std::rc::Rc;
+
     use super::InvestmentAccount;
     #[test]
     fn add_123_funds_test_success(){
