@@ -27,6 +27,7 @@ impl InvestmentAccount {
     pub fn new(owner: String, balance: f64) -> Self {
         InvestmentAccount { owner, balance, operations: vec!(), portfolio: HashMap::new() }
     } 
+
     pub fn add_funds(&mut self, amount: f64) -> Result<String, String> {
         if amount <= 0. {
             return Err("Amount to be added should be > 0".to_string());
@@ -35,15 +36,27 @@ impl InvestmentAccount {
         Ok(format!("Adding ${:.02} to the balance. New balance is ${:.02}", amount, self.balance))
     }
 
-    pub fn buy_asset(&mut self, asset_name: String, asset_type: InvestmentType, quantity: f64, cost: f64) -> Result<String, String> {
+    pub fn buy_asset(&mut self, asset_name: &String, asset_type: InvestmentType, quantity: f64, cost: f64) -> Result<String, String> {
         let operation_total = quantity * cost;
         if self.is_operation_allowed(operation_total) {
-            self.save_operation(&asset_name, asset_type, quantity, operation_total);
+            self.save_operation(asset_name, asset_type, quantity, operation_total);
             self.update_balance(operation_total);
-            self.update_portfolio(&asset_name, quantity);
+            self.update_portfolio(asset_name, quantity);
             Ok(format!("Bought {} {} for ${:.02}", quantity, asset_name, operation_total))
         } else {
             Err(format!("Not enough funds. Balance is ${:.02} and operation total is ${:.02}", self.balance, operation_total))
+        }
+    }
+
+    pub fn show_operations(&self){
+        for operation in &self.operations {
+            println!("{:?}", operation);
+        }
+    }
+
+    pub fn show_portfolio(&self){
+        for (asset_name, amount) in &self.portfolio {
+            println!("{}: {}", asset_name, amount);
         }
     }
 
