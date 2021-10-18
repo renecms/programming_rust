@@ -85,8 +85,6 @@ impl InvestmentAccount {
 
 #[cfg(test)]
 mod test {
-    use std::rc::Rc;
-
     use super::InvestmentAccount;
     #[test]
     fn add_123_funds_test_success(){
