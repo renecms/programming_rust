@@ -10,7 +10,7 @@ fn main() -> Result<(), String> {
     let mut account = InvestmentAccount::new("Rene".to_string(), 15605.);
     println!("{:?}", account);
 
-    println!("{}", account.add_funds(15678000.).unwrap());
+    println!("{}", account.add_funds(15678000.)?);
     println!("{:?}", account);
 
     let result = account.buy_asset(tesla.clone(), InvestmentType::STOCKS, 5., 970.12)?;
