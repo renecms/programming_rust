@@ -1,0 +1,3 @@
+hello world generics
+hello world trait objects
+hello world generics
