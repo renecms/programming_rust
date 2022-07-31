@@ -2,17 +2,54 @@
 use async_std::io::prelude::*;
 use async_std::net;
 
+pub async fn many_requests_local(
+    requests: Vec<(String, u16, String)>,
+) -> Vec<std::io::Result<String>> {
+    use async_std::task;
+
+    let mut handles = vec![];
+
+    for (host, port, path) in requests {
+        handles.push(task::spawn_local(async move {
+            cheapo_request(&host, port, &path).await
+        }))
+    }
+
+    let mut results = vec![];
+
+    for handle in handles {
+        results.push(handle.await);
+    }
+    results
+}
+
+pub async fn many_requests_local_wrapper(
+    requests: Vec<(String, u16, String)>,
+) -> Vec<std::io::Result<String>> {
+    use async_std::task;
+
+    let mut handles = vec![];
+
+    for (host, port, path) in requests {
+        handles.push(task::spawn_local(async move {
+            cheapo_request(&host, port, &path).await
+        }))
+    }
+
+    let mut results = vec![];
+    for handle in handles {
+        results.push(handle.await);
+    }
+    results
+}
+
 pub async fn many_requests(requests: Vec<(String, u16, String)>) -> Vec<std::io::Result<String>> {
     use async_std::task;
 
     let mut handles = vec![];
 
-    // for (host, port, path) in requests {
-    //     handles.push(task::spawn_local(cheapo_owning_request(host, port, path)));
-    // }
-
     for (host, port, path) in requests {
-        handles.push(task::spawn_local(async move {
+        handles.push(task::spawn(async move {
             cheapo_request(&host, port, &path).await
         }))
     }
