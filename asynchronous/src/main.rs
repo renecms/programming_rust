@@ -1,6 +1,23 @@
 #![allow(dead_code)]
+
 use async_std::io::prelude::*;
 use async_std::net;
+
+pub async fn many_requests_surf(urls: &[String]) -> Vec<Result<String, surf::Error>> {
+    let client = surf::client();
+
+    let mut handles = vec![];
+    for url in urls {
+        let request = client.get(&url).recv_string();
+        handles.push(async_std::task::spawn(request));
+    }
+
+    let mut results = vec![];
+    for handle in handles {
+        results.push(handle.await);
+    }
+    results
+}
 
 pub async fn many_requests_local(
     requests: Vec<(String, u16, String)>,
@@ -85,9 +102,20 @@ fn main() {
         ("www.red-bean.com".to_string(), 80, "/".to_string()),
         ("en.wikipedia.org".to_string(), 80, "/".to_string()),
     ];
-
+    let requests_surf = &[
+        "http://example.com".to_string(),
+        "https://www.red-bean.com".to_string(),
+        "https://en.wikipedia.org".to_string(),
+    ];
     let results = async_std::task::block_on(many_requests(requests));
-    for result in results {
+    let results_surf = async_std::task::block_on(many_requests_surf(requests_surf));
+
+    print_collection(results.into_iter());
+    print_collection(results_surf.into_iter());
+}
+
+fn print_collection(input: impl Iterator<Item = Result<String, impl std::fmt::Display>>) {
+    for result in input {
         match result {
             Ok(response) => println!("{}", response),
             Err(err) => eprintln!("error: {}", err),
