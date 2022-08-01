@@ -66,7 +66,7 @@ mod tests {
     }
 
     #[test]
-    fn test_fromserver_json() {
+    fn test_fromserver_message_json() {
         use std::sync::Arc;
 
         let from_server = FromServer::Message {
